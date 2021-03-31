@@ -13,19 +13,37 @@ HalfEdgeMesh::~HalfEdgeMesh() {}
  * \param[in] v3 vertex 3, glm::vec3
  */
 bool HalfEdgeMesh::AddFace(const std::vector<glm::vec3>& verts) {
-    // Add your code here
-    std::cerr << "ADD TRIANGLE NOT IMPLEMENTED. ";
-
     // Add the vertices of the face/triangle
+    const size_t vertIdx1 = AddVertex(verts.at(0));
+    const size_t vertIdx2 = AddVertex(verts.at(1));
+    const size_t vertIdx3 = AddVertex(verts.at(2));
 
     // Add all half-edge pairs
+    auto [innerEdgeIdx1, outerEdgeIdx1] = AddHalfEdgePair(vertIdx1, vertIdx2);
+    auto [innerEdgeIdx2, outerEdgeIdx2] = AddHalfEdgePair(vertIdx2, vertIdx3);
+    auto [innerEdgeIdx3, outerEdgeIdx3] = AddHalfEdgePair(vertIdx3, vertIdx1);
 
     // Connect inner ring
+    e(innerEdgeIdx1).next = innerEdgeIdx2;
+    e(innerEdgeIdx2).next = innerEdgeIdx3;
+    e(innerEdgeIdx3).next = innerEdgeIdx1;
+
+    e(innerEdgeIdx1).prev = innerEdgeIdx3;
+    e(innerEdgeIdx2).prev = innerEdgeIdx1;
+    e(innerEdgeIdx3).prev = innerEdgeIdx2;
 
     // Finally, create the face, don't forget to set the normal (which should be
     // normalized)
+    Face face;
+    face.edge = innerEdgeIdx1;
+    const size_t faceIdx = mFaces.size();
+    mFaces.push_back(face);
+    f(faceIdx).normal = FaceNormal(faceIdx);
 
     // All half-edges share the same left face (previously added)
+    e(innerEdgeIdx1).face = faceIdx;
+    e(innerEdgeIdx2).face = faceIdx;
+    e(innerEdgeIdx3).face = faceIdx;
 
     // Optionally, track the (outer) boundary half-edges
     // to represent non-closed surfaces
@@ -198,7 +216,12 @@ std::vector<size_t> HalfEdgeMesh::FindNeighborVertices(size_t vertexIndex) const
     // Collected vertices, sorted counter clockwise!
     std::vector<size_t> oneRing;
 
-    // Add your code here
+    EdgeIterator edgeIter = GetEdgeIterator(v(vertexIndex).edge).Prev();
+    const EdgeIterator startIter = edgeIter;
+    do {
+        oneRing.push_back(edgeIter.GetEdgeVertexIndex());
+        edgeIter.Pair().Prev();
+    } while (edgeIter != startIter);
 
     return oneRing;
 }
@@ -212,14 +235,69 @@ std::vector<size_t> HalfEdgeMesh::FindNeighborFaces(size_t vertexIndex) const {
     // Collected faces, sorted counter clockwise!
     std::vector<size_t> foundFaces;
 
-    // Add your code here
+    EdgeIterator edgeIter = GetEdgeIterator(v(vertexIndex).edge).Prev();
+    const EdgeIterator startIter = edgeIter;
+    do {
+        foundFaces.push_back(edgeIter.GetEdgeFaceIndex());
+        edgeIter.Pair().Prev();
+    } while (edgeIter != startIter);
+
     return foundFaces;
 }
 
 /*! \lab1 Implement the curvature */
 float HalfEdgeMesh::VertexCurvature(size_t vertexIndex) const {
-    // Copy code from SimpleMesh or compute more accurate estimate
-    return 0;
+#if 1 // 1 = mean curvature, 0 = Gaussian curvature
+    float voronoiArea = 0;
+    glm::vec3 sum{ 0.0f, 0.0f, 0.0f };
+    const glm::vec3& tipPoint = v(vertexIndex).pos; // The point where the curvature is evaluated
+    std::vector<size_t> oneRing = FindNeighborVertices(vertexIndex);
+
+    for (int i = 0; i < oneRing.size(); ++i) {
+        const glm::vec3& middlePoint = v(oneRing.at(i)).pos;
+        const size_t prevPointIdx = (i != 0) ? (i - 1) : (oneRing.size() - 1);
+        const size_t nextPointIdx = (i + 1) % oneRing.size();
+        const glm::vec3& prevPoint = v(oneRing.at(prevPointIdx)).pos;
+        const glm::vec3& nextPoint = v(oneRing.at(nextPointIdx)).pos;
+
+        const float cotAlpha = Cotangent(tipPoint, prevPoint, middlePoint);
+        const float cotBeta = Cotangent(tipPoint, nextPoint, middlePoint);
+        sum += (cotAlpha + cotBeta) * (tipPoint - middlePoint);
+
+        voronoiArea += (cotAlpha + cotBeta)
+            * static_cast<float>(glm::pow(glm::length(tipPoint - middlePoint), 2));
+    }
+
+    voronoiArea /= 8.0f;
+    return glm::length(sum / (4 * voronoiArea));
+#else
+    std::vector<size_t> oneRing = FindNeighborVertices(vertexIndex);
+    assert(oneRing.size() != 0);
+
+    size_t curr, next;
+    const glm::vec3 &vi = mVerts.at(vertexIndex).pos;
+    float angleSum = 0;
+    float area = 0;
+    for (size_t i = 0; i < oneRing.size(); i++) {
+        // connections
+        curr = oneRing.at(i);
+        if (i < oneRing.size() - 1)
+            next = oneRing.at(i + 1);
+        else
+            next = oneRing.front();
+
+        // find vertices in 1-ring according to figure 5 in lab text
+        // next - beta
+        const glm::vec3 &nextPos = mVerts.at(next).pos;
+        const glm::vec3 &vj = mVerts.at(curr).pos;
+
+        // compute angle and area
+        angleSum += acos(glm::dot(vj - vi , nextPos - vi) /
+                         (glm::length(vj - vi) * glm::length(nextPos - vi)));
+        area += glm::length(glm::cross(vi - vj, nextPos - vj)) * 0.5f;
+    }
+    return (2.0f * static_cast<float>(M_PI) - angleSum) / area;
+#endif
 }
 
 float HalfEdgeMesh::FaceCurvature(size_t faceIndex) const {
@@ -248,10 +326,14 @@ glm::vec3 HalfEdgeMesh::FaceNormal(size_t faceIndex) const {
 }
 
 glm::vec3 HalfEdgeMesh::VertexNormal(size_t vertexIndex) const {
-
     glm::vec3 n(0.0f, 0.0f, 0.0f);
 
-    // Add your code here
+    auto faceIdxs = FindNeighborFaces(vertexIndex);
+    for (auto faceIdx : faceIdxs) {
+        n += f(faceIdx).normal;
+    }
+
+    n = glm::normalize(n);
     return n;
 }
 
@@ -330,27 +412,95 @@ void HalfEdgeMesh::Update() {
 /*! \lab1 Implement the area */
 float HalfEdgeMesh::Area() const {
     float area = 0;
-    // Add code here
-    std::cerr << "Area calculation not implemented for half-edge mesh!\n";
+    for (const Face& face : mFaces) {
+        EdgeIterator it = GetEdgeIterator(face.edge);
+
+        glm::vec3 v1 = v(it.GetEdgeVertexIndex()).pos;
+        glm::vec3 v2 = v(it.Prev().GetEdgeVertexIndex()).pos;
+        glm::vec3 v3 = v(it.Prev().GetEdgeVertexIndex()).pos;
+
+        area += 0.5f * glm::length(glm::cross((v2-v1), (v3-v1)));
+    }
     return area;
 }
 
 /*! \lab1 Implement the volume */
 float HalfEdgeMesh::Volume() const {
     float volume = 0;
-    // Add code here
-    std::cerr << "Volume calculation not implemented for half-edge mesh!\n";
-    return volume;
+
+    for (const Face& face : mFaces) {
+        EdgeIterator it = GetEdgeIterator(face.edge);
+
+        glm::vec3 v1 = v(it.GetEdgeVertexIndex()).pos;
+        glm::vec3 v2 = v(it.Prev().GetEdgeVertexIndex()).pos;
+        glm::vec3 v3 = v(it.Prev().GetEdgeVertexIndex()).pos;
+
+        const float faceArea = 0.5f * glm::length(glm::cross((v2-v1), (v3-v1)));
+        const glm::vec3 faceField = (v1 + v2 + v3) / 3.0f;
+
+        volume += glm::dot(faceField, face.normal) * faceArea;
+    }
+
+    return volume / 3.0f;
 }
 
 /*! \lab1 Calculate the number of shells  */
-size_t HalfEdgeMesh::Shells() const { return 1; }
+size_t HalfEdgeMesh::Shells() const {
+    int shellCount = 0;
+    std::set<size_t> allVerts; // This might be redundant
+    std::set<size_t> vertexQueueSet;
+    std::set<size_t> vertexTaggedSet;
+
+    // Insert indices for all vertices in allVerts
+    for (size_t i = 0; i < GetNumVerts(); ++i) allVerts.insert(i);
+
+    // A set storing the vertices that have not yet been visited
+    std::set<size_t> diffSet = allVerts;
+
+    while (!diffSet.empty()) {
+        ++shellCount;
+        vertexQueueSet.insert(*diffSet.begin());
+
+        while (!vertexQueueSet.empty()) {
+            const size_t vIdx = *vertexQueueSet.begin();
+            vertexQueueSet.erase(vertexQueueSet.begin());
+            vertexTaggedSet.insert(vIdx);
+            for (const size_t viIdx : FindNeighborVertices(vIdx)) {
+                if (vertexTaggedSet.find(viIdx) == vertexTaggedSet.end()) {
+                    vertexQueueSet.insert(viIdx);
+                }
+            }
+        }
+
+        diffSet.clear();
+        std::set_difference(allVerts.begin(), allVerts.end(),
+                            vertexTaggedSet.begin(), vertexTaggedSet.end(),
+                            std::inserter(diffSet, diffSet.begin()));
+    }
+    return shellCount;
+}
 
 /*! \lab1 Implement the genus */
 size_t HalfEdgeMesh::Genus() const {
-    // Add code here
-    std::cerr << "Genus calculation not implemented for half-edge mesh!\n";
-    return 0;
+    // V−E+F−(L−F)−2(S−G) = 0
+    // <=> S-G = (V-E+F-(L-F))/2
+    // <=> G = S-(V-E+F-(L-F))/2
+    const long V = GetNumVerts();
+    const long E = GetNumEdges() / 2; // Every edge is two halfedges
+    const long F = GetNumFaces();
+    const long S = Shells();
+    const long L = F; // Triangles => as many loops as there are faces
+
+    return S - (V - E + F - (L-F)) / 2;
+
+    // The code below only works when one shell is used
+//    // V−E+F−2(1−G) = 0
+//    // <=> 1-G = (V-E+F)/2
+//    // <=> G = 1-(V-E+F)/2
+//    const long V = GetNumVerts();
+//    const long E = GetNumEdges() / 2; // Every edge is two halfedges
+//    const long F = GetNumFaces();
+//    return 1 - (V - E + F) / 2;
 }
 
 void HalfEdgeMesh::Dilate(float amount) {
