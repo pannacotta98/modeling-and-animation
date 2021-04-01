@@ -247,7 +247,7 @@ std::vector<size_t> HalfEdgeMesh::FindNeighborFaces(size_t vertexIndex) const {
 
 /*! \lab1 Implement the curvature */
 float HalfEdgeMesh::VertexCurvature(size_t vertexIndex) const {
-#if 1 // 1 = mean curvature, 0 = Gaussian curvature
+#if 0 // 1 = mean curvature, 0 = Gaussian curvature
     float voronoiArea = 0;
     glm::vec3 sum{ 0.0f, 0.0f, 0.0f };
     const glm::vec3& tipPoint = v(vertexIndex).pos; // The point where the curvature is evaluated
