@@ -52,10 +52,43 @@ void QuadricDecimationMesh::computeCollapse(EdgeCollapse* collapse) {
     veryNiceMatrix[2][3] = 0;
     veryNiceMatrix[3][3] = 1;
 
-    // Invertible?!
-    const glm::vec4 v = glm::inverse(veryNiceMatrix) * glm::vec4(0,0,0,1);
-    collapse->position = v;
-    collapse->cost = glm::dot(v, Q * v);
+    const float eps = 1e-6;
+
+    // A square matrix is singular if and only if its determinant is zero. Mvh Wikipedia
+    const bool matrixIsSingular = glm::abs(glm::determinant(veryNiceMatrix)) < eps;
+    glm::vec4 vBar;
+    float vBarCost = INFINITY;
+    if (!matrixIsSingular) {
+        vBar = glm::inverse(veryNiceMatrix) * glm::vec4(0,0,0,1);
+        vBarCost = glm::dot(vBar, Q * vBar);
+    }
+
+    // Find alternative positions
+    const glm::vec4 v1{ v(v1Idx).pos, 1 };
+    const glm::vec4 v2{ v(v2Idx).pos, 1 };
+    const glm::vec4 v1v2Middle{ 0.5f * (v(v1Idx).pos + v(v2Idx).pos), 1 };
+    const float v1Cost = glm::dot(v1, Q * v1);
+    const float v2Cost = glm::dot(v2, Q * v2);
+    const float v1v2MiddleCost = glm::dot(v1v2Middle, Q * v1v2Middle);
+
+    // Find the position that has the smallest cost
+    float finalCost = vBarCost;
+    glm::vec4 finalPos = vBar;
+    if (v1Cost < finalCost) {
+        finalCost = v1Cost;
+        finalPos = v1;
+    }
+    if (v2Cost < finalCost) {
+        finalCost = v2Cost;
+        finalPos = v2;
+    }
+    if (v1v2MiddleCost < finalCost) {
+        finalCost = v1v2MiddleCost;
+        finalPos = v1v2Middle;
+    }
+
+    collapse->cost = finalCost;
+    collapse->position = finalPos;
 }
 
 /*! After each edge collapse the vertex properties need to be updated */
