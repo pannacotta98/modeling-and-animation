@@ -1,4 +1,5 @@
 #include "QuadricDecimationMesh.h"
+#include "GUI/GLViewer.h"
 
 const QuadricDecimationMesh::VisualizationMode QuadricDecimationMesh::QuadricIsoSurfaces =
     NewVisualizationMode("Quadric Iso Surfaces");
@@ -87,8 +88,21 @@ void QuadricDecimationMesh::computeCollapse(EdgeCollapse* collapse) {
         finalPos = v1v2Middle;
     }
 
+#if 1
     collapse->cost = finalCost;
     collapse->position = finalPos;
+#else
+    collapse->cost = finalCost;
+    const glm::vec3 currentFaceNormal = f(halfEdge.face).normal;
+    const glm::vec3 cameraDirection =
+        glm::normalize(glm::vec3(finalPos) - GLViewer::GetCamera().GetPosition());
+    // Prefer to collapse triangles at the back of the model
+    if (glm::dot(currentFaceNormal, cameraDirection) < 0.2) {
+        collapse->cost *= 10;
+    }
+    collapse->position = finalPos;
+#endif
+    
 }
 
 /*! After each edge collapse the vertex properties need to be updated */
