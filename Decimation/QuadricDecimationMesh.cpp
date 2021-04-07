@@ -1,5 +1,10 @@
 #include "QuadricDecimationMesh.h"
 #include "GUI/GLViewer.h"
+#include "gtc/type_ptr.hpp"
+
+namespace {
+    const float eps = 1e-6;
+}
 
 const QuadricDecimationMesh::VisualizationMode QuadricDecimationMesh::QuadricIsoSurfaces =
     NewVisualizationMode("Quadric Iso Surfaces");
@@ -53,8 +58,6 @@ void QuadricDecimationMesh::computeCollapse(EdgeCollapse* collapse) {
     veryNiceMatrix[2][3] = 0;
     veryNiceMatrix[3][3] = 1;
 
-    const float eps = 1e-6;
-
     // A square matrix is singular if and only if its determinant is zero. Mvh Wikipedia
     const bool matrixIsSingular = glm::abs(glm::determinant(veryNiceMatrix)) < eps;
     glm::vec4 vBar;
@@ -88,7 +91,7 @@ void QuadricDecimationMesh::computeCollapse(EdgeCollapse* collapse) {
         finalPos = v1v2Middle;
     }
 
-#if 1
+#if 0
     collapse->cost = finalCost;
     collapse->position = finalPos;
 #else
@@ -135,7 +138,7 @@ glm::mat4 QuadricDecimationMesh::createQuadricForFace(size_t indx) const {
 
     const glm::vec3& normal = f(indx).normal;
     const glm::vec3& pointOnPlane = v(e(f(indx).edge).vert).pos;
-    const float d = -glm::dot(normal, pointOnPlane);
+    const float d = -glm::dot(normal, pointOnPlane); 
     const glm::vec4 p(normal, d);
 
     return glm::outerProduct(p, p);
@@ -150,9 +153,25 @@ void QuadricDecimationMesh::Render() {
     if (mVisualizationMode == QuadricIsoSurfaces) {
         // Apply transform
         glPushMatrix();  // Push modelview matrix onto stack
+        glMultMatrixf(glm::value_ptr(mTransform));
 
-        // Implement the quadric visualization here
-        std::cout << "Quadric visualization not implemented" << std::endl;
+        glm::mat4 R;
+        glColor3f(0, 1, 0);
+        GLUquadric* quad;
+        quad = gluNewQuadric();
+
+        for (int i = 0; i < mQuadrics.size(); ++i) {
+            const auto& Q = mQuadrics[i];
+            if (CholeskyFactorization(Q, R) && !isVertexCollapsed(i)) {
+                //if (glm::abs(glm::determinant(R)) < eps) continue;
+                glPushMatrix();
+                glMultMatrixf(glm::value_ptr(glm::inverse(R)));
+
+                gluSphere(quad, 1, 10, 10);
+
+                glPopMatrix();
+            }
+        }
 
         // Restore modelview matrix
         glPopMatrix();
