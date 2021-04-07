@@ -52,6 +52,51 @@ inline float Cotangent(const glm::vec3 &a, const glm::vec3 &b, const glm::vec3 &
     return glm::dot(bc, ba) / glm::length(glm::cross(bc, ba));
 }
 
+/*!
+ * Compute the Cholesky Factorization of a 4x4 matrix. The method computes the
+ * upper triangular matrix R of the factorization so that A = Rt * R, where
+ * Rt is the transpose of R.
+ *
+ * Originally based on public domain code by <Ajay_Shah@rand.org>
+ * which can be found at http://lib.stat.cmu.edu/general/ajay
+ *
+ * \param[in] A the matrix to decompose
+ * \param[in] R matrix to store the resulting Cholesky Factor in
+ * \return true if the factorization was successful, false otherwise
+ */
+inline bool CholeskyFactorization(const glm::mat4 &A, glm::mat4 &R) {
+    static const int N = 4;
+
+    bool success = true;
+    float sum;
+
+    for (int row = 0; row < N; row++) {
+        /* First compute R[row][row] */
+        sum = A[row][row];
+        for (int j = 0; j <= (row - 1); j++) {
+            sum -= R[row][j] * R[row][j];
+        }
+        if (sum > 0.f) {
+            R[row][row] = glm::sqrt(sum);
+            /* Now find elements R[k][row], k > row. */
+            for (int k = (row + 1); k < N; k++) {
+                sum = A[k][row];
+                for (int j = 0; j <= (row - 1); j++) {
+                    sum -= R[row][j] * R[k][j];
+                }
+                R[k][row] = sum / R[row][row];
+            }
+        } else { /* blast off the entire row. */
+            for (int k = row; k < N; k++) {
+                R[k][row] = 0.0;
+            }
+            success = false;
+        }
+    }
+
+    return success;
+}
+
 /*! \brief Return the sign of a value
  *
  *  \f{eqnarray*}
