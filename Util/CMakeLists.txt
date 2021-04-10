@@ -23,6 +23,8 @@ if(BUILD_LAB1)
 		Util/HotColorMap.h
 		Util/HSVColorMap.cpp
 		Util/HSVColorMap.h
+		Util/Image.h
+		Util/Image_Impl.h
 		Util/IsoContourColorMap.cpp
 		Util/IsoContourColorMap.h
 		Util/JetColorMap.cpp
@@ -37,6 +39,7 @@ if(BUILD_LAB1)
 		Util/trackball.h
 		Util/Util.cpp
 		Util/Util.h
+		Util/stb/stb_image_write.h
 	)
 	if(WIN32)
 		set(UTIL ${UTIL}

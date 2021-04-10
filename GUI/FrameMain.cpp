@@ -1,5 +1,7 @@
 #include <GUI/FrameMain.h>
 
+size_t FrameMain::numScreenCaptures = 0;
+
 FrameMain::FrameMain(wxWindow *parent) : BaseFrameMain(parent) {
     GLGridPlane *plane = new GLGridPlane("Grid");
     plane->SetDimensions(4.0, 4.0);
@@ -376,8 +378,8 @@ void FrameMain::CaptureScreen(wxCommandEvent &event) {
   if (!magn.ToDouble(&mag)) return;
   mGLViewer->ScreenCapture(std::string(filename.mb_str()), mag);
   }*/
-    wxFileDialog *dialog = new wxFileDialog(this, _T("Save as"), _T("."), _T("dump.tga"),
-                                            _T("TGA (*.tga)|*.tga"), wxFD_SAVE, wxDefaultPosition);
+    wxFileDialog *dialog = new wxFileDialog(this, _T("Save as"), _T("."), _T("MoA_ScreenCapture(" + std::to_string(numScreenCaptures++) + ").png"),
+                                            _T("PNG (*.png)|*.png"), wxFD_SAVE, wxDefaultPosition);
     if (dialog->ShowModal() == wxID_OK) {
         wxString filename = dialog->GetPath();
         mGLViewer->ScreenCapture(std::string(filename.mb_str()), 1.0);

@@ -70,6 +70,7 @@ class FrameMain : public BaseFrameMain {
 public:
   /** Constructor */
   FrameMain(wxWindow *parent);
+    static size_t numScreenCaptures;
 
 protected:
   class VisualizationModeData : public wxClientData {

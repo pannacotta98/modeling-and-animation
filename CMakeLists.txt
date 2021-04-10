@@ -195,6 +195,7 @@ include_directories(
 	.
 	./
 	./VC++/glm/
+	./Util/stb/
 )
 
 ###
