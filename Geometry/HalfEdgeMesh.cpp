@@ -349,11 +349,17 @@ void HalfEdgeMesh::Update() {
     for (size_t i = 0; i < GetNumFaces(); i++) {
         f(i).normal = FaceNormal(i);
     }
+
+    auto start = std::chrono::high_resolution_clock::now();
     // Then update all vertex normals and curvature
     for (size_t i = 0; i < GetNumVerts(); i++) {
         // Vertex normals are just weighted averages
         mVerts.at(i).normal = VertexNormal(i);
     }
+    auto stop = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
+    std::cout << "HalfEdge vertex normal calc time in millisecond: "
+              << duration.count() << std::endl;
 
     // Then update vertex curvature
     for (size_t i = 0; i < GetNumVerts(); i++) {

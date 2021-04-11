@@ -16,6 +16,7 @@
 #include <Util/ColorMap.h>
 #include <glm.hpp>
 #include <gtc/type_ptr.hpp>
+#include <chrono> // To measure performance
 
 //-----------------------------------------------------------------------------
 SimpleMesh::SimpleMesh() {}
@@ -216,11 +217,17 @@ void SimpleMesh::Initialize() {
   for (size_t i = 0; i < mFaces.size(); i++) {
     mFaces.at(i).normal = FaceNormal(i);
   }
+
+  auto start = std::chrono::high_resolution_clock::now();
   // Then update all vertex normals and curvature
   for (size_t i = 0; i < mVerts.size(); i++) {
     // Vertex normals are just weighted averages
     mVerts.at(i).normal = VertexNormal(i);
   }
+  auto stop = std::chrono::high_resolution_clock::now();
+  auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
+  std::cout << "SimpleMesh vertex normal calc time in millisecond: "
+            << duration.count() << std::endl;
 
   // Then update vertex curvature
   for (size_t i = 0; i < mVerts.size(); i++) {
