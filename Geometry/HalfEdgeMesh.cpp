@@ -247,8 +247,8 @@ std::vector<size_t> HalfEdgeMesh::FindNeighborFaces(size_t vertexIndex) const {
 
 /*! \lab1 Implement the curvature */
 float HalfEdgeMesh::VertexCurvature(size_t vertexIndex) const {
-#if 0 // 1 = mean curvature, 0 = Gaussian curvature
-    float voronoiArea = 0;
+#if 1 // 1 = mean curvature, 0 = Gaussian curvature
+    float area = 0;
     glm::vec3 sum{ 0.0f, 0.0f, 0.0f };
     const glm::vec3& tipPoint = v(vertexIndex).pos; // The point where the curvature is evaluated
     std::vector<size_t> oneRing = FindNeighborVertices(vertexIndex);
@@ -264,17 +264,20 @@ float HalfEdgeMesh::VertexCurvature(size_t vertexIndex) const {
         const float cotBeta = Cotangent(tipPoint, nextPoint, middlePoint);
         sum += (cotAlpha + cotBeta) * (tipPoint - middlePoint);
 
-        voronoiArea += (cotAlpha + cotBeta)
-            * static_cast<float>(glm::pow(glm::length(tipPoint - middlePoint), 2));
+        // Voronoi area
+        area += (cotAlpha + cotBeta)
+            * static_cast<float>(glm::pow(glm::length(tipPoint - middlePoint), 2)) / 8.0f;
+
+//        // Regular area
+//        area += glm::length(glm::cross(prevPoint - tipPoint, nextPoint - tipPoint)) * 0.5f;
     }
 
-    voronoiArea /= 8.0f;
-    return glm::length(sum / (4 * voronoiArea));
+    return glm::length(sum / (4 * area));
 #else
     std::vector<size_t> oneRing = FindNeighborVertices(vertexIndex);
     assert(oneRing.size() != 0);
 
-    size_t curr, next;
+    size_t curr, next, prev;
     const glm::vec3 &vi = mVerts.at(vertexIndex).pos;
     float angleSum = 0;
     float area = 0;
@@ -286,15 +289,29 @@ float HalfEdgeMesh::VertexCurvature(size_t vertexIndex) const {
         else
             next = oneRing.front();
 
+        if (i == 0)
+            prev = oneRing.back();
+        else
+            prev = oneRing.at(i - 1);
+
         // find vertices in 1-ring according to figure 5 in lab text
         // next - beta
         const glm::vec3 &nextPos = mVerts.at(next).pos;
         const glm::vec3 &vj = mVerts.at(curr).pos;
+        const glm::vec3 &prevPos = mVerts.at(prev).pos;
 
         // compute angle and area
         angleSum += acos(glm::dot(vj - vi , nextPos - vi) /
                          (glm::length(vj - vi) * glm::length(nextPos - vi)));
+
+        // Regular area
         area += glm::length(glm::cross(vi - vj, nextPos - vj)) * 0.5f;
+
+//        // Voronoi area
+//        const float cotAlpha = Cotangent(vi, prevPos, vj);
+//        const float cotBeta = Cotangent(vi, nextPos, vj);
+//        area += (1.0f / 8.0f) * (cotAlpha + cotBeta)
+//                       * static_cast<float>(glm::pow(glm::length(vi - vj), 2));
     }
     return (2.0f * static_cast<float>(M_PI) - angleSum) / area;
 #endif
