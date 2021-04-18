@@ -1,6 +1,7 @@
 #include <Geometry/HalfEdgeMesh.h>
 #include <gtc/type_ptr.hpp>
 #include <iterator>
+#include <chrono>
 
 HalfEdgeMesh::HalfEdgeMesh() {}
 
