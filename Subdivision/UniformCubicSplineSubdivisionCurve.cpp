@@ -21,7 +21,7 @@ void UniformCubicSplineSubdivisionCurve::Subdivide() {
     // If 'mCoefficients' had size N, how large should 'newc' be? Perform a check
     // here!
     int nPoints = mCoefficients.size();
-    std::cout << "Points: " << nPoints;
+    //std::cout << "Points: " << nPoints;
 
     assert(true && "Incorrect number of new coefficients!");
 
