@@ -59,9 +59,9 @@ void QuadricDecimationMesh::computeCollapse(EdgeCollapse* collapse) {
     const bool matrixIsSingular = glm::abs(glm::determinant(veryNiceMatrix)) < eps;
     glm::vec4 vBar;
     float vBarCost = INFINITY;
-    if (!matrixIsSingular) {
+    if (!matrixIsSingular) { 
         vBar = glm::inverse(veryNiceMatrix) * glm::vec4(0,0,0,1);
-        vBarCost = glm::dot(vBar, Q * vBar);
+        vBarCost = glm::dot(vBar, Q * vBar); //results in a scalar cost value
     }
 
     // Find alternative positions
@@ -134,7 +134,7 @@ glm::mat4 QuadricDecimationMesh::createQuadricForVert(size_t indx) const {
 glm::mat4 QuadricDecimationMesh::createQuadricForFace(size_t indx) const {
 
     const glm::vec3& normal = f(indx).normal;
-    const glm::vec3& pointOnPlane = v(e(f(indx).edge).vert).pos;
+    const glm::vec3& pointOnPlane = v(e(f(indx).edge).vert).pos; //which point does this choose? doesnt matter to be fair
     const float d = -glm::dot(normal, pointOnPlane);
     const glm::vec4 p(normal, d);
 
