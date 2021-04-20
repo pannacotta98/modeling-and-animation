@@ -17,9 +17,18 @@ void UniformCubicSplineSubdivisionCurve::Subdivide() {
 
     // Implement the subdivision scheme for a natural cubic spline here
 
+    newc.push_back(mCoefficients.front());
+    for(size_t i = 1; i < mCoefficients.size() - 1; i++) {
+        glm::vec3 cPrimei = (1.f * mCoefficients[i - 1] + 6.f * mCoefficients[i] + 1.f * mCoefficients[i + 1]) / 8.f;
+        glm::vec3 cPrimeiHalf = (4.f * mCoefficients[i] + 4.f * mCoefficients[i + 1]) / 8.f;
+        newc.push_back(cPrimei);
+        newc.push_back(cPrimeiHalf);
+    }
+    newc.push_back(mCoefficients.back());
+
     // If 'mCoefficients' had size N, how large should 'newc' be? Perform a check
     // here!
-    assert(true && "Incorrect number of new coefficients!");
+    assert(newc.size() == 2*mCoefficients.size() - 2 && "Incorrect number of new coefficients!");
 
     mCoefficients = newc;
 }

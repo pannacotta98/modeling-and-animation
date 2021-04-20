@@ -105,19 +105,33 @@ std::vector<std::vector<glm::vec3>> LoopSubdivisionMesh::Subdivide(size_t faceIn
 glm::vec3 LoopSubdivisionMesh::VertexRule(size_t vertexIndex) {
     // Get the current vertex
     glm::vec3 vtx = v(vertexIndex).pos;
+    std::vector<size_t> neighbors = FindNeighborVertices(vertexIndex);
 
-    return vtx;
+    float beta = Beta(neighbors.size());
+
+    glm::vec3 sum;
+    for(size_t i = 0; i < neighbors.size(); i++){
+        sum += beta * v(neighbors[i]).pos;
+    }
+    sum += (1 - neighbors.size() * beta) * vtx;
+
+    return sum;
 }
 
 /*! Computes a new vertex, placed along an edge in the old mesh
  */
 glm::vec3 LoopSubdivisionMesh::EdgeRule(size_t edgeIndex) {
-    // Place the edge vertex halfway along the edge
+    // Place the edge vertices based on weights from the original point
     HalfEdge &e0 = e(edgeIndex);
     HalfEdge &e1 = e(e0.pair);
+
     glm::vec3 &v0 = v(e0.vert).pos;
     glm::vec3 &v1 = v(e1.vert).pos;
-    return (v0 + v1) * 0.5f;
+
+    glm::vec3& v2 = v(e(e0.prev).vert).pos;
+    glm::vec3& v3 = v(e(e1.prev).vert).pos;
+
+    return (3.f*v0 + 3.f*v1 + v2 + v3) / 8.f;
 }
 
 //! Return weights for interior verts
