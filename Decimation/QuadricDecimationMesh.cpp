@@ -91,7 +91,7 @@ void QuadricDecimationMesh::computeCollapse(EdgeCollapse* collapse) {
         finalPos = v1v2Middle;
     }
 
-#if 0
+#if 1
     collapse->cost = finalCost;
     collapse->position = finalPos;
 #else

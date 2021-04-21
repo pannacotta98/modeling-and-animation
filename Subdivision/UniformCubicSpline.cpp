@@ -44,11 +44,15 @@ float UniformCubicSpline::GetBSplineValue(size_t i, float t) {
 /*! Evaluate the spline as the sum of the coefficients times the bsplines */
 glm::vec3 UniformCubicSpline::GetValue(float t) {
     glm::vec3 val;
-    float sum = 0;
-    for (size_t i = 0; i < mCoefficients.size(); i++) {
+
+    // Finding where the the looping can start and end without missing
+    // non-zero values (end is inclusive)
+    size_t start = static_cast<size_t>(t) - 1;
+    size_t end = static_cast<size_t>(t) + 2;
+
+    for (size_t i = start; i <= end; i++) {
         float bval = GetBSplineValue(i, t);
         val += mCoefficients.at(i) * bval;
-        sum += bval;
     }
     return val;
 }

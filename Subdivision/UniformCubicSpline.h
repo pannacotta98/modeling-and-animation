@@ -36,8 +36,7 @@ protected:
 
 public:
   UniformCubicSpline(const std::vector<glm::vec3> &joints,
-                     glm::vec3 lineColor = glm::vec3(0.0f, 1.0f,
-                                                               0.0f),
+                     glm::vec3 lineColor = glm::vec3(0.0f, 1.0f, 0.0f),
                      float lineWidth = 2.0f, float segmentLength = 0.01f);
 
   /*! The BSpline value is calculated from one of the four cardinal BSpline
