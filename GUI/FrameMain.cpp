@@ -706,8 +706,14 @@ void FrameMain::AddObjectImplicitMesh(wxCommandEvent &event) {
 }
 
 void FrameMain::AddObjectQuadricPlane(wxCommandEvent &event) {
-    glm::mat4 M{1.0f};
+    glm::mat4 M{
+        0.0f, 0.0f, 0.0f, 1.0f,
+        0.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 1.0f, 1.0f, 0.0f,
+    };
     // Construct the quadric matrix here
+
 
     Quadric *Q = new Quadric(M);
     Q->SetBoundingBox(Bbox(-1, 1));
@@ -720,8 +726,16 @@ void FrameMain::AddObjectQuadricPlane(wxCommandEvent &event) {
 }
 
 void FrameMain::AddObjectQuadricCylinder(wxCommandEvent &event) {
-    glm::mat4 M{1.0f};
-    // Construct the quadric matrix here
+    float A, B, C, D, E, F, G, H, I, J;
+    B = C = D = F = G = H = I = 0.f;
+    A = E = 1.0f;
+    J = -1.0f;
+    glm::mat4 M{
+        A, B, C, D,
+        B, E, F, G,
+        C, F, H, I,
+        D, G, I, J
+    };
 
     Quadric *Q = new Quadric(M);
     Q->SetBoundingBox(Bbox(-1, 1));
@@ -734,7 +748,24 @@ void FrameMain::AddObjectQuadricCylinder(wxCommandEvent &event) {
 }
 
 void FrameMain::AddObjectQuadricEllipsoid(wxCommandEvent &event) {
-    glm::mat4 M{1.0f};
+    //glm::mat4 M{
+    //    1.0f, 0.0f, 0.0f, 0.0f,
+    //    0.0f, 2.0f, 0.0f, 0.0f,
+    //    0.0f, 0.0f, 2.0f, 0.0f,
+    //    0.0f, 0.0f, 0.0f, 0.5f,
+    //};
+    float A, B, C, D, E, F, G, H, I, J;
+    B = C = D = F = G = I = 0.f;
+    A = E = 1.0f;
+    H = 2.0f;
+    J = -1.0f;
+    glm::mat4 M{
+        A, B, C, D,
+        B, E, F, G,
+        C, F, H, I,
+        D, G, I, J
+    };
+    //glm::mat4 M{ 0.5 };
     // Construct the quadric matrix here
 
     Quadric *Q = new Quadric(M);
@@ -748,8 +779,18 @@ void FrameMain::AddObjectQuadricEllipsoid(wxCommandEvent &event) {
 }
 
 void FrameMain::AddObjectQuadricCone(wxCommandEvent &event) {
-    glm::mat4 M{1.0f};
+    //glm::mat4 M{1.0f};
     // Construct the quadric matrix here
+      float A, B, C, D, E, F, G, H, I, J;
+    B = C = D = F = G = I = J = 0.f;
+    A = E = 1.0f;
+    H = -1.0f;
+    glm::mat4 M{
+        A, B, C, D,
+        B, E, F, G,
+        C, F, H, I,
+        D, G, I, J
+    };
 
     Quadric *Q = new Quadric(M);
     Q->SetBoundingBox(Bbox(-1, 1));
@@ -762,8 +803,18 @@ void FrameMain::AddObjectQuadricCone(wxCommandEvent &event) {
 }
 
 void FrameMain::AddObjectQuadricParaboloid(wxCommandEvent &event) {
-    glm::mat4 M{1.0f};
-    // Construct the quadric matrix here
+    float A, B, C, D, E, F, G, H, I, J;
+    B = C = D = F = G = 0.f;
+    A = E = 1.0f;
+    H = 0.0f;
+    J = 0.0f;
+    I = -0.5f;
+    glm::mat4 M{
+        A, B, C, D,
+        B, E, F, G,
+        C, F, H, I,
+        D, G, I, J
+    };
 
     Quadric *Q = new Quadric(M);
     Q->SetBoundingBox(Bbox(-2, 2));
@@ -776,8 +827,17 @@ void FrameMain::AddObjectQuadricParaboloid(wxCommandEvent &event) {
 }
 
 void FrameMain::AddObjectQuadricHyperboloid(wxCommandEvent &event) {
-    glm::mat4 M{1.0f};
-    // Construct the quadric matrix here
+    float A, B, C, D, E, F, G, H, I, J;
+    B = C = D = F = G = I = 0.f;
+    A = E = 1.0f;
+    H = -0.5f;
+    J = -1.0f;
+    glm::mat4 M{
+        A, B, C, D,
+        B, E, F, G,
+        C, F, H, I,
+        D, G, I, J
+    };
 
     Quadric *Q = new Quadric(M);
     Q->SetBoundingBox(Bbox(-2, 2));

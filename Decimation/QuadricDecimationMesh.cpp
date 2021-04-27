@@ -167,7 +167,7 @@ void QuadricDecimationMesh::Render() {
                 glPushMatrix();
                 glMultMatrixf(glm::value_ptr(glm::inverse(R)));
 
-                gluSphere(quad, 1, 10, 10);
+                gluSphere(quad, 3, 10, 10);
 
                 glPopMatrix();
             }
