@@ -82,7 +82,6 @@ glm::vec3 Implicit::GetGradient(float x, float y, float z) const {
     float Dy = (GetValue(x, y + mDelta, z) - GetValue(x, y - mDelta, z)) / (2.f * mDelta);
     float Dz = (GetValue(x, y, z + mDelta) - GetValue(x, y, z - mDelta)) / (2.f * mDelta);
     return glm::vec3(Dx, Dy, Dz);
-    //return glm::vec3(mDelta, 0, 0);
 }
 
 /*!

@@ -58,7 +58,13 @@ public:
         mBox = Bbox::BoxUnion(l->GetBoundingBox(), r->GetBoundingBox());
     }
 
-    virtual float GetValue(float x, float y, float z) const { return 0; }
+    virtual float GetValue(float x, float y, float z) const {
+        Implicit::TransformW2O(x, y, z);
+        float Dleft = exp(-left->GetValue(x, y, z));
+        float Dright = exp(-right->GetValue(x, y, z));
+        float Dunion = pow(pow(Dleft, mBlend) + pow(Dright, mBlend), 1.0f / mBlend);
+        return -log(Dunion);
+    }
 
 protected:
     int mBlend;
@@ -71,7 +77,13 @@ public:
         mBox = Bbox::BoxUnion(l->GetBoundingBox(), r->GetBoundingBox());
     }
 
-    virtual float GetValue(float x, float y, float z) const { return 0; }
+    virtual float GetValue(float x, float y, float z) const { 
+       Implicit::TransformW2O(x, y, z);
+        float Dleft = exp(-left->GetValue(x, y, z));
+        float Dright = exp(-right->GetValue(x, y, z));
+        float Dintersection = pow(pow(Dleft, -mBlend) + pow(Dright, -mBlend), -1.0f / mBlend);
+        return -log(Dintersection);
+    }
 
 protected:
     int mBlend;
@@ -84,7 +96,13 @@ public:
         mBox = l->GetBoundingBox();
     }
 
-    virtual float GetValue(float x, float y, float z) const { return 0; }
+    virtual float GetValue(float x, float y, float z) const {
+        Implicit::TransformW2O(x, y, z);
+        float Dleft = exp(-left->GetValue(x, y, z));
+        float Dright = exp(right->GetValue(x, y, z));
+        float Ddiff = pow(pow(Dleft, -mBlend) + pow(Dright, -mBlend), -1.0f / mBlend);
+        return -log(Ddiff);
+    }
 
 protected:
     int mBlend;
