@@ -126,14 +126,7 @@ public:
             int w;
             fscanf(file, "%d \n", &w);
             if (w == 4) {
-                // only float supported!
-                int x;
-                int y;
-                int z;
-                fscanf(file, "%d %d %d \n", &x, &y, &z);
-                mDimX = x;
-                mDimY = y;
-                mDimZ = z;
+                fscanf(file, "%u %u %u \n", &mDimZ, &mDimY, &mDimX);
             } else {
                 fclose(file);
                 std::cerr << "Error: Only float volumes supported, file bit depth = " << w
