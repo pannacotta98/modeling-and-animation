@@ -33,8 +33,7 @@ public:
         : LevelSetOperator(LS), mAlpha(alpha) {}
 
     virtual float ComputeTimestep() {
-        // Compute and return a stable timestep
-        return 1;
+        return 0.95f * mLS->GetDx() * mLS->GetDx() / (6.f * mAlpha);
     }
 
     virtual void Propagate(float time) {
@@ -53,7 +52,24 @@ public:
     }
 
     virtual float Evaluate(size_t i, size_t j, size_t k) {
-        // Compute the rate of change (dphi/dt)
-        return 0;
+        const float dx = mLS->Diff2Xpm(i, j, k);
+        const float dy = mLS->Diff2Ypm(i, j, k);
+        const float dz = mLS->Diff2Zpm(i, j, k);
+
+        const float dxx = mLS->Diff2Xpm(i, j, k);
+        const float dyy = mLS->Diff2Ypm(i, j, k);
+        const float dzz = mLS->Diff2Zpm(i, j, k);
+
+        const float dxy = mLS->Diff2XYpm(i, j, k);
+        const float dxz = mLS->Diff2ZXpm(i, j, k);
+        const float dyz = mLS->Diff2YZpm(i, j, k);
+
+        float kappa = (dx * dx * (dyy + dzz) - 2.f * dy * dz * dyz) / (2.f * pow(dx * dx + dy * dy + dz * dz, 3.f / 2.f))
+            + (dy * dy * (dxx + dzz) - 2.f * dx * dz * dxz) / (2.f * pow(dx * dx + dy * dy + dz * dz, 3.f / 2.f))
+            + (dz * dz * (dxx + dyy) - 2.f * dx * dy * dxy) / (2.f * pow(dx * dx + dy * dy + dz * dz, 3.f / 2.f));
+
+        const glm::vec3 gradient{ dx, dy, dz };
+
+        return mAlpha * kappa * glm::length(gradient);
     }
 };

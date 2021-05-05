@@ -2,6 +2,8 @@
 
 #include "Levelset/LevelSetOperator.h"
 #include "Math/Function3D.h"
+#include "gtx/component_wise.hpp"
+#include "Util/Stopwatch.h"
 
 /*! \brief A level set operator that does external advection
  *
@@ -23,11 +25,14 @@ public:
 
     virtual float ComputeTimestep() {
         // Compute and return a stable timestep
-        // (Hint: Function3D::GetMaxValue())
-        return 1;
+        const glm::vec3 maxV = mVectorField->GetMaxValue();
+        return 0.95f * mLS->GetDx() / glm::compMax(maxV);
     }
 
     virtual void Propagate(float time) {
+        Stopwatch stopwatch;
+        stopwatch.start();
+
         // Determine timestep for stability
         float dt = ComputeTimestep();
 
@@ -40,15 +45,19 @@ public:
             IntegrateEuler(dt);
             // IntegrateRungeKutta(dt);
         }
+        stopwatch.stop();
+        std::cout << "Advect time: " << stopwatch.read() << '\n';
     }
 
     virtual float Evaluate(size_t i, size_t j, size_t k) {
         // Compute the rate of change (dphi/dt)
-
-        // Remember that the point (i,j,k) is given in grid coordinates, while
-        // the velocity field used for advection needs to be sampled in
-        // world coordinates (x,y,z). You can use LevelSet::TransformGridToWorld()
-        // for this task.
-        return 0;
+        float x = i, y = j, z = k;
+        mLS->TransformGridToWorld(x, y, z);
+        const glm::vec3 V = mVectorField->GetValue(x, y, z);
+        const float dx = (V.x > 0) ? mLS->DiffXm(i, j, k) : mLS->DiffXp(i, j, k);
+        const float dy = (V.y > 0) ? mLS->DiffYm(i, j, k) : mLS->DiffYp(i, j, k);
+        const float dz = (V.z > 0) ? mLS->DiffZm(i, j, k) : mLS->DiffZp(i, j, k);
+        const glm::vec3 gradient{ dx, dy, dz };
+        return -glm::dot(V, gradient);
     }
 };

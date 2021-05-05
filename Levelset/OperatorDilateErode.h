@@ -35,11 +35,13 @@ public:
         // Compute and return a stable timestep
         //float maxDeltaT1 = 
         float maxDeltaT2 = mLS->GetDx() / abs(mF);
-        //float dt =
         return 0.95f * maxDeltaT2;
     }
 
     virtual void Propagate(float time) {
+        Stopwatch stopwatch;
+        stopwatch.start();
+
         // Determine timestep for stability
         float dt = ComputeTimestep();
 
@@ -53,10 +55,10 @@ public:
             IntegrateEuler(dt);
             // IntegrateRungeKutta(dt);
         }
+        std::cout << "Dilate/Erode time: " << stopwatch.read() << '\n';
     }
 
     virtual float Evaluate(size_t i, size_t j, size_t k) {
-        
         // Compute the rate of change (dphi/dt)
         float ddx2, ddy2, ddz2;
         Godunov(i, j, k, mF, ddx2, ddy2, ddz2);

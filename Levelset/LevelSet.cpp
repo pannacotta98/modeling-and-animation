@@ -124,8 +124,11 @@ float LevelSet::GetValue(float x, float y, float z) const {
 glm::vec3 LevelSet::GetGradient(float x, float y, float z) const {
     //return Implicit::GetGradient(x, y, z);
     TransformWorldToGrid(x, y, z); // TERrribvle NamEs
-    return glm::vec3{ DiffXpm(x, y, z), DiffYpm(x, y, z), DiffZpm(x, y, z) };
-    //return glm::vec3{ DiffXm(x, y, z), DiffYm(x, y, z), DiffZm(x, y, z) };
+    x += 0.5f;
+    y += 0.5f;
+    z += 0.5f;
+    //return glm::vec3{ DiffXpm(x, y, z), DiffYpm(x, y, z), DiffZpm(x, y, z) };   //different scheme for the report (fw p, bw m, center pm)
+    return glm::vec3{ DiffXm(x, y, z), DiffYm(x, y, z), DiffZm(x, y, z) };
 }
 
 /*!
