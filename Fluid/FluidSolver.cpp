@@ -166,6 +166,8 @@ void FluidSolver::ExternalForces(float dt) {
 void FluidSolver::SelfAdvection(float dt, int steps) {
     // Copy the current velocity field
     Volume<glm::vec3> velocities = mVelocityField;
+    glm::vec3 currVelocityField = { 0.0f, 0.0f, 0.0f };
+    glm::vec3 zeroMassParticle = { 0.0f, 0.0f, 0.0f };
 
     for (int i = 0; i < mVoxels.GetDimX(); i++) {
         for (int j = 0; j < mVoxels.GetDimY(); j++) {
@@ -180,13 +182,20 @@ void FluidSolver::SelfAdvection(float dt, int steps) {
                 // When you trace the particle you interpolate the velocities inbetween
                 // the grid points, use mVelocityField.GetValue(float i, float j, float
                 // k) for trilinear interpolation.
-                //if (IsFluid(i, j, k))
-                //{
-                //    if() {
+                if (IsFluid(i, j, k)) {
 
-                //    }
+                    currVelocityField = velocities.GetValue((size_t)i, j, k);
+                    zeroMassParticle = glm::vec3(i, j, k);
 
-                //}
+                    for (int step = 0; step < steps; ++step) {
+                        zeroMassParticle -= (currVelocityField * (dt / steps)) / mDx;
+                        currVelocityField = mVelocityField.GetValue(
+                            zeroMassParticle.x, zeroMassParticle.y, zeroMassParticle.z);
+                    }
+
+                    velocities.SetValue(i, j, k, currVelocityField);
+                }
+               
                 
             }
         }
