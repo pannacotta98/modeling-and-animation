@@ -102,7 +102,7 @@ int FluidSolver::Solve(float time) {
 
         // Compute the projection for preserving volume
         std::cerr << "Projection..." << std::endl;
-        Projection();
+        Projection(dt);
 
         // The projection should not violate the boundary conditions,
         // but it might becacuse of numerical errors (the solution is not
@@ -153,6 +153,7 @@ void FluidSolver::ExternalForces(float dt) {
                     // FluidSolver::TransformGridToWorld()) and perform the integration to
                     // update the velocity field (mVelocityField). The simplest possible
                     // integrator is the explicit Euler.
+                    // Eq. 7
                     TransformGridToWorld(i, j, k, x, y, z);
                     const glm::vec3 F = mExternalForces->GetValue(x, y, z);
                     mVelocityField.SetValue(i, j, k, mVelocityField.GetValue((size_t)i,j,k) + dt * F);
@@ -169,37 +170,37 @@ void FluidSolver::SelfAdvection(float dt, int steps) {
     glm::vec3 currVelocityField = { 0.0f, 0.0f, 0.0f };
     glm::vec3 zeroMassParticle = { 0.0f, 0.0f, 0.0f };
 
-    //for (int i = 0; i < mVoxels.GetDimX(); i++) {
-    //    for (int j = 0; j < mVoxels.GetDimY(); j++) {
-    //        for (int k = 0; k < mVoxels.GetDimZ(); k++) {
-    //            
-    //            // If we're in fluid, sample the current velocity field at (i,j,k).
-    //            // Then, trace a particle at initial position (i,j,k) back in time
-    //            // through the velocity field using 'steps' number of steps. Note that
-    //            // each step is dt/steps time units long. Note also that the velocities
-    //            // are given in world space, but you perform the trace in grid space so
-    //            // you need to scale the velocities accordingly (grid spacing: mDx).
-    //            // When you trace the particle you interpolate the velocities inbetween
-    //            // the grid points, use mVelocityField.GetValue(float i, float j, float
-    //            // k) for trilinear interpolation.
-    //            if (IsFluid(i, j, k)) {
+    for (int i = 0; i < mVoxels.GetDimX(); i++) {
+        for (int j = 0; j < mVoxels.GetDimY(); j++) {
+            for (int k = 0; k < mVoxels.GetDimZ(); k++) {
+                
+                // If we're in fluid, sample the current velocity field at (i,j,k).
+                // Then, trace a particle at initial position (i,j,k) back in time
+                // through the velocity field using 'steps' number of steps. Note that
+                // each step is dt/steps time units long. Note also that the velocities
+                // are given in world space, but you perform the trace in grid space so
+                // you need to scale the velocities accordingly (grid spacing: mDx).
+                // When you trace the particle you interpolate the velocities inbetween
+                // the grid points, use mVelocityField.GetValue(float i, float j, float
+                // k) for trilinear interpolation.
+                if (IsFluid(i, j, k)) {
 
-    //                currVelocityField = velocities.GetValue((size_t)i, j, k);
-    //                zeroMassParticle = glm::vec3(i, j, k);
+                    currVelocityField = velocities.GetValue((size_t)i, j, k);
+                    zeroMassParticle = glm::vec3(i, j, k);
 
-    //                for (int step = 0; step < steps; ++step) {
-    //                    zeroMassParticle -= (currVelocityField * (dt / steps)) / mDx;
-    //                    currVelocityField = mVelocityField.GetValue(
-    //                        zeroMassParticle.x, zeroMassParticle.y, zeroMassParticle.z);
-    //                }
+                    for (int step = 0; step < steps; ++step) {
+                        zeroMassParticle -= (currVelocityField * (dt / steps)) / mDx;
+                        currVelocityField = mVelocityField.GetValue(
+                            zeroMassParticle.x, zeroMassParticle.y, zeroMassParticle.z);
+                    }
 
-    //                velocities.SetValue(i, j, k, currVelocityField);
-    //            }
-    //           
-    //            
-    //        }
-    //    }
-    //}
+                    velocities.SetValue(i, j, k, currVelocityField);
+                }
+               
+                
+            }
+        }
+    }
 
     // Update the current velocity field
     mVelocityField = velocities;
@@ -239,7 +240,7 @@ void FluidSolver::EnforceDirichletBoundaryCondition() {
                         V.z = 0;
                     }
 
-                    mVelocityField.SetValue(i, j, k, V);
+                    mVelocityField.SetValue(i, j, k, V); //loss of
                 }
             }
         }
@@ -247,7 +248,7 @@ void FluidSolver::EnforceDirichletBoundaryCondition() {
 }
 
 // Project the velocity field to preserve the volume
-void FluidSolver::Projection() {
+void FluidSolver::Projection(float dt) {
 
     // Compute number of elements in the grid
     auto elements = mVoxels.GetDimX() * mVoxels.GetDimY() * mVoxels.GetDimZ();
@@ -291,6 +292,8 @@ void FluidSolver::Projection() {
                         mVelocityField.GetValue(static_cast<size_t>(i), j, k + 1).z
                         - mVelocityField.GetValue(static_cast<size_t>(i), j, k - 1).z
                         ) / (2.0f * mDx);
+                        //- 6.0f * (mInitialVolume - mCurrentVolume);
+                        //- ((mInitialVolume - mCurrentVolume) / (dt * elements));
                     b.at(ind) = divergence;
 
                     // Compute entries for A matrix (discrete Laplacian operator).

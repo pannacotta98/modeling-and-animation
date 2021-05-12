@@ -25,7 +25,7 @@ public:
 
     virtual float ComputeTimestep() {
         // Compute and return a stable timestep
-        const glm::vec3 maxV = mVectorField->GetMaxValue();
+        const glm::vec3 maxV = glm::abs(mVectorField->GetMaxValue());
         return 0.7f * mLS->GetDx() / glm::compMax(maxV);
     }
    

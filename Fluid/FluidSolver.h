@@ -68,7 +68,7 @@ protected:
     void ExternalForces(float dt);
     void SelfAdvection(float dt, int steps);
     void EnforceDirichletBoundaryCondition();
-    void Projection();
+    void Projection(float dt);
     void VelocityExtension();
 
     bool IsSolid(size_t i, size_t j, size_t k) const;
