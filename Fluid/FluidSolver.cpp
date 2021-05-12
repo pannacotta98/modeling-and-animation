@@ -169,37 +169,37 @@ void FluidSolver::SelfAdvection(float dt, int steps) {
     glm::vec3 currVelocityField = { 0.0f, 0.0f, 0.0f };
     glm::vec3 zeroMassParticle = { 0.0f, 0.0f, 0.0f };
 
-    for (int i = 0; i < mVoxels.GetDimX(); i++) {
-        for (int j = 0; j < mVoxels.GetDimY(); j++) {
-            for (int k = 0; k < mVoxels.GetDimZ(); k++) {
-                
-                // If we're in fluid, sample the current velocity field at (i,j,k).
-                // Then, trace a particle at initial position (i,j,k) back in time
-                // through the velocity field using 'steps' number of steps. Note that
-                // each step is dt/steps time units long. Note also that the velocities
-                // are given in world space, but you perform the trace in grid space so
-                // you need to scale the velocities accordingly (grid spacing: mDx).
-                // When you trace the particle you interpolate the velocities inbetween
-                // the grid points, use mVelocityField.GetValue(float i, float j, float
-                // k) for trilinear interpolation.
-                if (IsFluid(i, j, k)) {
+    //for (int i = 0; i < mVoxels.GetDimX(); i++) {
+    //    for (int j = 0; j < mVoxels.GetDimY(); j++) {
+    //        for (int k = 0; k < mVoxels.GetDimZ(); k++) {
+    //            
+    //            // If we're in fluid, sample the current velocity field at (i,j,k).
+    //            // Then, trace a particle at initial position (i,j,k) back in time
+    //            // through the velocity field using 'steps' number of steps. Note that
+    //            // each step is dt/steps time units long. Note also that the velocities
+    //            // are given in world space, but you perform the trace in grid space so
+    //            // you need to scale the velocities accordingly (grid spacing: mDx).
+    //            // When you trace the particle you interpolate the velocities inbetween
+    //            // the grid points, use mVelocityField.GetValue(float i, float j, float
+    //            // k) for trilinear interpolation.
+    //            if (IsFluid(i, j, k)) {
 
-                    currVelocityField = velocities.GetValue((size_t)i, j, k);
-                    zeroMassParticle = glm::vec3(i, j, k);
+    //                currVelocityField = velocities.GetValue((size_t)i, j, k);
+    //                zeroMassParticle = glm::vec3(i, j, k);
 
-                    for (int step = 0; step < steps; ++step) {
-                        zeroMassParticle -= (currVelocityField * (dt / steps)) / mDx;
-                        currVelocityField = mVelocityField.GetValue(
-                            zeroMassParticle.x, zeroMassParticle.y, zeroMassParticle.z);
-                    }
+    //                for (int step = 0; step < steps; ++step) {
+    //                    zeroMassParticle -= (currVelocityField * (dt / steps)) / mDx;
+    //                    currVelocityField = mVelocityField.GetValue(
+    //                        zeroMassParticle.x, zeroMassParticle.y, zeroMassParticle.z);
+    //                }
 
-                    velocities.SetValue(i, j, k, currVelocityField);
-                }
-               
-                
-            }
-        }
-    }
+    //                velocities.SetValue(i, j, k, currVelocityField);
+    //            }
+    //           
+    //            
+    //        }
+    //    }
+    //}
 
     // Update the current velocity field
     mVelocityField = velocities;
@@ -207,37 +207,39 @@ void FluidSolver::SelfAdvection(float dt, int steps) {
 
 // Enforce the Dirichlet boundary conditions
 void FluidSolver::EnforceDirichletBoundaryCondition() {
-    for (int i = 0; i < mVoxels.GetDimX(); i++) {
-        for (int j = 0; j < mVoxels.GetDimY(); j++) {
-            for (int k = 0; k < mVoxels.GetDimZ(); k++) {
-            
+    for (size_t i = 0; i < mVoxels.GetDimX(); i++) {
+        for (size_t j = 0; j < mVoxels.GetDimY(); j++) {
+            for (size_t k = 0; k < mVoxels.GetDimZ(); k++) {
+
                 if (IsFluid(i, j, k))
                 {
                     // If we're in fluid, check the neighbors of (i,j,k) to
                     // see if it's next to a solid boundary. If so, project
                     // the velocity to the boundary plane by setting the
                     // velocity to zero along the given dimension.
-                    const glm::vec3 V = mVelocityField.GetValue((size_t)i, j, k);
-                    if (IsSolid(i - 1, j, k) && V.x < 0) {
-                        mVelocityField.SetValue(i, j, k, { 0.0f, V.y, V.z });
+                    glm::vec3 V = mVelocityField.GetValue(i, j, k);
+                    if (i == 0 || (IsSolid(i - 1, j, k) && V.x < 0)) {
+                        V.x = 0;
                     }
-                    else if(IsSolid(i + 1, j, k) && V.x > 0){
-                        mVelocityField.SetValue(i, j, k, { 0.0f, V.y, V.z });
-                    }
-
-                    if (IsSolid(i, j - 1, k) && V.y < 0) {
-                        mVelocityField.SetValue(i, j, k, { V.x, 0.0f, V.z });
-                    }
-                    else if (IsSolid(i, j + 1, k) && V.y > 0) {
-                        mVelocityField.SetValue(i, j, k, { V.x, 0.0f, V.z });
+                    else if (i == mVoxels.GetDimX() - 1 || (IsSolid(i + 1, j, k) && V.x > 0)) {
+                        V.x = 0;
                     }
 
-                    if (IsSolid(i, j, k - 1) && V.z < 0) {
-                        mVelocityField.SetValue(i, j, k, { V.x, V.y, 0.0f });
+                    if (j == 0 || (IsSolid(i, j - 1, k) && V.y < 0)) {
+                        V.y = 0;
                     }
-                    else if (IsSolid(i, j, k + 1) && V.z > 0) {
-                        mVelocityField.SetValue(i, j, k, { V.x, V.y, 0.0f });
+                    else if (j == mVoxels.GetDimY() - 1 || (IsSolid(i, j + 1, k) && V.y > 0)) {
+                        V.y = 0;
                     }
+
+                    if (k == 0 || (IsSolid(i, j, k - 1) && V.z < 0)) {
+                        V.z = 0;
+                    }
+                    else if (k == mVoxels.GetDimZ() - 1 || (IsSolid(i, j, k + 1) && V.z > 0)) {
+                        V.z = 0;
+                    }
+
+                    mVelocityField.SetValue(i, j, k, V);
                 }
             }
         }

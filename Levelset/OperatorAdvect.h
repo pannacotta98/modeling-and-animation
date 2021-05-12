@@ -26,9 +26,9 @@ public:
     virtual float ComputeTimestep() {
         // Compute and return a stable timestep
         const glm::vec3 maxV = mVectorField->GetMaxValue();
-        return 0.95f * mLS->GetDx() / glm::compMax(maxV);
+        return 0.7f * mLS->GetDx() / glm::compMax(maxV);
     }
-
+   
     virtual void Propagate(float time) {
         Stopwatch stopwatch;
         stopwatch.start();

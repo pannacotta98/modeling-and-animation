@@ -50,8 +50,8 @@ public:
         i = glm::clamp(i, size_t{0}, mDimX - 1);
         j = glm::clamp(j, size_t{0}, mDimY - 1);
         k = glm::clamp(k, size_t{0}, mDimZ - 1);
-        return mData.at(i*mPremult + j*mDimZ + k); // .at() does bound checking, throws exception
-        //return mData[i * mPremult + j * mDimZ + k];  // op [] does no bound checking
+        //return mData.at(i*mPremult + j*mDimZ + k); // .at() does bound checking, throws exception
+        return mData[i * mPremult + j * mDimZ + k];  // op [] does no bound checking
     }
 
     //! Returns the value at x,y,z (uses trilinear interpolation)
