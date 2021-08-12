@@ -15,7 +15,7 @@ The content of the labs:
 
 - **Lab 2 — Mesh decimation**
 
-  - Mesh decimation based on _Surface Simplification Using Quadric Error Metrics_ by Michael Garlandand Paul S. Heckbert
+  - Mesh decimation based on _Surface Simplification Using Quadric Error Metrics_ by Michael Garlandand and Paul S. Heckbert
   - Alterations to the error metric to achieve more decimation on surfaces that are not seen
   - Visualization of the error quadrics
 
